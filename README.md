@@ -9,7 +9,7 @@ A full-stack Team Task Manager with role-based access control, built with **ASP.
 | | |
 |---|---|
 | **Live URL** | `https://your-app.up.railway.app` |
-| **GitHub** | `https://github.com/yourusername/taskmanager` |
+| **GitHub** | ` https://github.com/Vectorutkarsh9/Task-Manager-Ethara.AI` |
 | **Demo Video** | `https://loom.com/your-video` |
 
 ---
