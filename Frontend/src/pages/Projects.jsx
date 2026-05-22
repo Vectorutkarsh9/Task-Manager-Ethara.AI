@@ -4,7 +4,7 @@ import api from '../services/api'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import SkeletonLoader from '../components/SkeletonLoader'
+import { ProjectSkeletonCard } from '../components/SkeletonCard'
 import EmptyState from '../components/EmptyState'
 
 export default function Projects() {
@@ -13,7 +13,6 @@ export default function Projects() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [creating, setCreating] = useState(false)
-  const [error, setError] = useState('')
   const { isAdmin } = useAuth()
   const { success, error: toastError } = useToast()
 
@@ -32,7 +31,6 @@ export default function Projects() {
   const handleCreate = async (e) => {
     e.preventDefault()
     setCreating(true)
-    setError('')
     try {
       await api.post('/api/projects', form)
       success(`Project "${form.name}" created successfully!`)
@@ -41,7 +39,6 @@ export default function Projects() {
       fetchProjects()
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Failed to create project'
-      setError(errMsg)
       toastError(errMsg)
     } finally {
       setCreating(false)
@@ -71,7 +68,7 @@ export default function Projects() {
           {isAdmin && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-95"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-95"
             >
               {showForm ? 'Close Form' : '+ New Project'}
             </button>
@@ -81,13 +78,12 @@ export default function Projects() {
         {showForm && isAdmin && (
           <form onSubmit={handleCreate} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-8 space-y-4 animate-fade-in shadow-xl shadow-black/10">
             <h2 className="text-white font-bold text-lg">Create New Project</h2>
-            {error && <div className="bg-red-950/50 border border-red-900 text-red-300 px-4 py-2.5 rounded-xl text-sm">{error}</div>}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-gray-400">Project Name</label>
               <input
                 required
                 placeholder="e.g. LLM Data Pipeline"
-                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700/80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
               />
@@ -97,7 +93,7 @@ export default function Projects() {
               <textarea
                 placeholder="Summarize the core target of this project..."
                 rows={3}
-                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-indigo-500 resize-none transition"
+                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700/80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition"
                 value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
               />
@@ -114,14 +110,15 @@ export default function Projects() {
         )}
 
         {loading ? (
-          <div className="pt-2">
-            <SkeletonLoader type="project" count={2} />
+          <div className="grid md:grid-cols-2 gap-5 pt-2">
+            <ProjectSkeletonCard />
+            <ProjectSkeletonCard />
           </div>
         ) : projects.length === 0 ? (
           <div className="py-12">
             <EmptyState
               title="No Projects Active"
-              description="You aren't associated with any active projects yet. Get in touch with an administrator."
+              description="You aren't associated with any active projects yet. Get started by creating your first sprint project."
               icon="project"
               actionLabel={isAdmin ? "Create Your First Project" : null}
               onAction={isAdmin ? () => setShowForm(true) : null}
@@ -132,7 +129,7 @@ export default function Projects() {
             {projects.map(p => (
               <div 
                 key={p.id} 
-                className="bg-gray-900 border border-gray-850/80 rounded-2xl p-5 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-900/5 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 group flex flex-col justify-between"
+                className="bg-gray-900 border border-gray-850 rounded-2xl p-5 hover:border-indigo-500/40 hover:shadow-2xl hover:shadow-indigo-950/10 hover:-translate-y-1.5 transition-all duration-300 ease-out group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between">
@@ -172,7 +169,7 @@ export default function Projects() {
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-800/50">
+                <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-850/50">
                   <div className="flex items-center gap-2">
                     <div className="flex -space-x-1.5">
                       {p.members?.slice(0, 4).map(m => {

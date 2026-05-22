@@ -4,30 +4,30 @@ import api from '../services/api'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import SkeletonLoader from '../components/SkeletonLoader'
+import { TaskSkeletonCard } from '../components/SkeletonCard'
 import EmptyState from '../components/EmptyState'
 
 const STATUSES = ['Todo', 'InProgress', 'Done']
 const STATUS_LABELS = { Todo: 'To Do', InProgress: 'In Progress', Done: 'Done' }
 const STATUS_COLORS = {
-  Todo:       'border-gray-800 bg-gray-900/40',
-  InProgress: 'border-amber-950/50 bg-amber-950/10',
-  Done:       'border-emerald-950/50 bg-emerald-950/10',
+  Todo:       'border-gray-850 bg-gray-900/30',
+  InProgress: 'border-amber-950/40 bg-amber-950/5',
+  Done:       'border-emerald-950/40 bg-emerald-950/5',
 }
 const STATUS_LEFT_BORDER = {
-  Todo:       'border-l-4 border-l-slate-500',
-  InProgress: 'border-l-4 border-l-amber-500',
-  Done:       'border-l-4 border-l-emerald-500',
+  Todo:       'border-l-4 border-l-slate-650',
+  InProgress: 'border-l-4 border-l-amber-600',
+  Done:       'border-l-4 border-l-emerald-605',
 }
 const PRIORITY_BADGES = {
-  High:   'bg-red-950/50 text-red-400 border border-red-900/30',
+  High:   'bg-rose-950/50 text-rose-400 border border-rose-900/30',
   Medium: 'bg-amber-950/50 text-amber-400 border border-amber-900/30',
-  Low:    'bg-gray-800 text-gray-400 border border-gray-700/30',
+  Low:    'bg-emerald-950/50 text-emerald-400 border border-emerald-900/30',
 }
 
 export default function ProjectDetail() {
   const { id } = useParams()
-  const { isAdmin, user } = useAuth()
+  const { isAdmin } = useAuth()
   const { success, error: toastError } = useToast()
   const [project, setProject]   = useState(null)
   const [tasks, setTasks]       = useState([])
@@ -37,7 +37,6 @@ export default function ProjectDetail() {
   const [taskForm, setTaskForm] = useState({ title: '', description: '', assignedToId: '', dueDate: '', priority: 'Medium' })
   const [memberUserId, setMemberUserId] = useState('')
   const [saving, setSaving]     = useState(false)
-  const [error, setError]       = useState('')
 
   const fetchAll = async () => {
     try {
@@ -68,7 +67,7 @@ export default function ProjectDetail() {
 
   const handleCreateTask = async (e) => {
     e.preventDefault()
-    setSaving(true); setError('')
+    setSaving(true)
     try {
       const payload = {
         title: taskForm.title,
@@ -84,7 +83,6 @@ export default function ProjectDetail() {
       fetchAll()
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Failed to create task'
-      setError(errMsg)
       toastError(errMsg)
     } finally {
       setSaving(false)
@@ -104,7 +102,7 @@ export default function ProjectDetail() {
 
   const handleAddMember = async (e) => {
     e.preventDefault()
-    setSaving(true); setError('')
+    setSaving(true)
     try {
       await api.post(`/api/projects/${id}/members`, { userId: parseInt(memberUserId) })
       success('Staff member added to project team.')
@@ -113,7 +111,6 @@ export default function ProjectDetail() {
       fetchAll()
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Failed to add member'
-      setError(errMsg)
       toastError(errMsg)
     } finally {
       setSaving(false)
@@ -125,11 +122,17 @@ export default function ProjectDetail() {
   if (loading) return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6 animate-pulse">
-        <div className="h-6 w-48 bg-gray-800 rounded-lg"></div>
-        <div className="h-4 w-96 bg-gray-850 rounded-lg"></div>
-        <div className="pt-4">
-          <SkeletonLoader type="kanban" count={3} />
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        <div className="h-7 w-48 bg-gray-900 rounded-lg animate-pulse"></div>
+        <div className="h-4 w-96 bg-gray-900 rounded-lg animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
+          {STATUSES.map(status => (
+            <div key={status} className="rounded-2xl border border-gray-850 bg-gray-900/40 p-4 space-y-4">
+              <div className="h-5 w-24 bg-gray-900 rounded animate-pulse mb-2"></div>
+              <TaskSkeletonCard />
+              <TaskSkeletonCard />
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -161,8 +164,6 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {error && <div className="bg-red-950/50 border border-red-900 text-red-300 px-4 py-2.5 rounded-xl mb-4 text-sm">{error}</div>}
-
         {/* Add Member Form */}
         {showMemberForm && isAdmin && (
           <form onSubmit={handleAddMember} className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row gap-4 items-end animate-fade-in shadow-xl shadow-black/10">
@@ -170,11 +171,11 @@ export default function ProjectDetail() {
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">User ID to Add</label>
               <input required type="number" value={memberUserId} onChange={e => setMemberUserId(e.target.value)}
                 placeholder="e.g. 2"
-                className="w-full bg-gray-800 text-white rounded-xl px-4 py-2.5 border border-gray-700 focus:outline-none focus:border-indigo-500 transition" />
+                className="w-full bg-gray-800 text-white rounded-xl px-4 py-2.5 border border-gray-700/80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               <button type="submit" disabled={saving} className="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition shadow-lg shadow-indigo-600/10">
-                Add Staff
+                {saving ? 'Adding…' : 'Add Staff'}
               </button>
               <button type="button" onClick={() => setShowMemberForm(false)} className="text-gray-400 hover:text-white text-sm font-semibold px-4 py-2.5 hover:bg-gray-800 rounded-xl transition">Cancel</button>
             </div>
@@ -188,13 +189,13 @@ export default function ProjectDetail() {
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-gray-400">Task Title</label>
               <input required placeholder="Brief title of work"
-                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700/80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} />
             </div>
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-gray-400">Task Description</label>
               <textarea placeholder="Outline task scope and targets..." rows={3}
-                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-indigo-500 resize-none transition"
+                className="w-full bg-gray-800/80 text-white rounded-xl px-4 py-3 border border-gray-700/80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition"
                 value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -230,96 +231,104 @@ export default function ProjectDetail() {
           </form>
         )}
 
-        {/* Kanban Board with Horizontal Swipe for Mobile */}
-        <div className="flex flex-row overflow-x-auto md:grid md:grid-cols-3 gap-5 pb-5 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-          {STATUSES.map(status => (
-            <div key={status} className={`rounded-2xl border p-4 flex-1 min-w-[310px] md:min-w-0 flex flex-col ${STATUS_COLORS[status]}`}>
-              <div className="flex items-center justify-between mb-4 border-b border-gray-800/40 pb-2">
-                <span className="font-extrabold text-white text-sm tracking-tight">{STATUS_LABELS[status]}</span>
-                <span className="text-[10px] font-bold bg-gray-900 border border-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{tasksByStatus(status).length}</span>
-              </div>
-              
-              <div className="space-y-3.5 flex-1 min-h-[300px]">
-                {tasksByStatus(status).map(task => (
-                  <div 
-                    key={task.id} 
-                    className={`bg-gray-900 rounded-xl p-4 border border-gray-850 shadow-md hover:border-gray-700/60 hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[140px] group ${STATUS_LEFT_BORDER[task.status]}`}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-white text-sm font-semibold leading-snug">{task.title}</p>
-                        {isAdmin && (
-                          <button 
-                            onClick={() => handleDeleteTask(task.id, task.title)} 
-                            className="text-gray-500 hover:text-red-400 hover:bg-red-950/20 p-1 rounded-md transition shrink-0 opacity-0 group-hover:opacity-100 duration-200"
-                            title="Delete Task"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                      {task.description && <p className="text-gray-400 text-xs mt-1.5 leading-relaxed line-clamp-2">{task.description}</p>}
-                    </div>
-                    
-                    <div className="mt-4 pt-3 border-t border-gray-850/40 space-y-3">
-                      {/* Metas: Due Date & Priority */}
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        {task.dueDate ? (
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
-                            new Date(task.dueDate) < new Date() && task.status !== 'Done' 
-                              ? 'bg-red-950/30 text-red-400 border-red-900/20' 
-                              : 'bg-gray-850 text-gray-400 border-gray-800/40'
-                          }`}>
-                            📅 {new Date(task.dueDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})}
-                          </span>
-                        ) : (
-                          <span className="text-[9px] text-gray-600">No deadline</span>
-                        )}
-                        
-                        <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider ${PRIORITY_BADGES[task.priority] || PRIORITY_BADGES.Medium}`}>
-                          {task.priority || 'Medium'}
-                        </span>
+        {/* Project Empty State OR Kanban Board */}
+        {tasks.length === 0 ? (
+          <div className="py-12">
+            <EmptyState
+              title="No Tasks Found"
+              description="This project doesn't have any tasks yet. Create your first task to start tracking work."
+              icon="task"
+              actionLabel={isAdmin ? "Create Your First Task" : null}
+              onAction={isAdmin ? () => setShowTaskForm(true) : null}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-row overflow-x-auto md:grid md:grid-cols-3 gap-5 pb-5 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+            {STATUSES.map(status => (
+              <div key={status} className={`rounded-2xl border p-4 flex-1 min-w-[310px] md:min-w-0 flex flex-col ${STATUS_COLORS[status]}`}>
+                <div className="flex items-center justify-between mb-4 border-b border-gray-850 pb-2">
+                  <span className="font-extrabold text-white text-sm tracking-tight">{STATUS_LABELS[status]}</span>
+                  <span className="text-[10px] font-bold bg-gray-950 border border-gray-850 text-gray-400 px-2 py-0.5 rounded-full">{tasksByStatus(status).length}</span>
+                </div>
+                
+                <div className="space-y-3.5 flex-1 min-h-[300px]">
+                  {tasksByStatus(status).map(task => (
+                    <div 
+                      key={task.id} 
+                      className={`bg-gray-900 rounded-xl p-4 border border-gray-850 shadow-md hover:border-gray-700/60 hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[140px] group ${STATUS_LEFT_BORDER[task.status]}`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-white text-sm font-semibold leading-snug">{task.title}</p>
+                          {isAdmin && (
+                            <button 
+                              onClick={() => handleDeleteTask(task.id, task.title)} 
+                              className="text-gray-500 hover:text-red-400 hover:bg-red-950/20 p-1 rounded-md transition shrink-0 opacity-0 group-hover:opacity-100 duration-200"
+                              title="Delete Task"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                        {task.description && <p className="text-gray-400 text-xs mt-1.5 leading-relaxed line-clamp-2">{task.description}</p>}
                       </div>
                       
-                      {/* Assignee & Move status */}
-                      <div className="flex items-center justify-between pt-1 gap-2">
-                        {task.assignedTo ? (
-                          <div className="flex items-center gap-1.5 bg-gray-850 px-2 py-0.5 rounded-full border border-gray-800/40 max-w-[140px]">
-                            <div className="w-4 h-4 rounded-full bg-indigo-950 flex items-center justify-center text-[8px] text-indigo-300 font-bold shrink-0">
-                              {task.assignedTo.name[0].toUpperCase()}
-                            </div>
-                            <span className="text-[10px] text-gray-300 font-medium truncate">{task.assignedTo.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 italic">Unassigned</span>
-                        )}
+                      <div className="mt-4 pt-3 border-t border-gray-850/40 space-y-3">
+                        {/* Metas: Due Date & Priority */}
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          {task.dueDate ? (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                              new Date(task.dueDate) < new Date() && task.status !== 'Done' 
+                                ? 'bg-red-950/30 text-red-400 border-red-900/20' 
+                                : 'bg-gray-850 text-gray-400 border-gray-800/40'
+                            }`}>
+                              📅 {new Date(task.dueDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-gray-650">No deadline</span>
+                          )}
+                          
+                          <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider ${PRIORITY_BADGES[task.priority] || PRIORITY_BADGES.Medium}`}>
+                            {task.priority || 'Medium'}
+                          </span>
+                        </div>
                         
-                        {/* Status change dropdown */}
-                        <select
-                          className="text-[10px] rounded-lg bg-gray-850 border border-gray-800 text-gray-300 px-2 py-1 focus:outline-none focus:border-indigo-600 transition"
-                          value={task.status}
-                          onChange={e => handleStatusChange(task.id, e.target.value)}
-                        >
-                          {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                        </select>
+                        {/* Assignee & Move status */}
+                        <div className="flex items-center justify-between pt-1 gap-2">
+                          {task.assignedTo ? (
+                            <div className="flex items-center gap-1.5 bg-gray-850 px-2 py-0.5 rounded-full border border-gray-800/40 max-w-[140px]">
+                              <div className="w-4 h-4 rounded-full bg-indigo-950 flex items-center justify-center text-[8px] text-indigo-300 font-bold shrink-0">
+                                {task.assignedTo.name[0].toUpperCase()}
+                              </div>
+                              <span className="text-[10px] text-gray-300 font-medium truncate">{task.assignedTo.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 italic">Unassigned</span>
+                          )}
+                          
+                          {/* Status change dropdown */}
+                          <select
+                            className="text-[10px] rounded-lg bg-gray-850 border border-gray-800 text-gray-300 px-2 py-1 focus:outline-none focus:border-indigo-650 transition"
+                            value={task.status}
+                            onChange={e => handleStatusChange(task.id, e.target.value)}
+                          >
+                            {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                
-                {tasksByStatus(status).length === 0 && (
-                  <div className="h-full flex items-center justify-center py-10">
-                    <EmptyState
-                      title=""
-                      description={`No tasks in ${STATUS_LABELS[status]}`}
-                      icon="task"
-                    />
-                  </div>
-                )}
+                  ))}
+                  
+                  {tasksByStatus(status).length === 0 && (
+                    <div className="h-32 flex items-center justify-center border border-dashed border-gray-850 rounded-xl">
+                      <span className="text-gray-500 text-xs italic">No tasks in {STATUS_LABELS[status]}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Team Members List */}
         <div className="mt-8 bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl shadow-black/10">
@@ -343,3 +352,4 @@ export default function ProjectDetail() {
     </div>
   )
 }
+

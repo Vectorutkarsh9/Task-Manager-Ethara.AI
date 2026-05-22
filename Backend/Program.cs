@@ -86,19 +86,35 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 // ── CORS ───────────────────────────────────────────────────────────
+var allowedOrigins = new List<string> { "http://localhost:5173" };
+var allowedOriginsEnv = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
+if (!string.IsNullOrEmpty(allowedOriginsEnv))
+{
+    var origins = allowedOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(o => o.Trim())
+                                   .ToList();
+    allowedOrigins.AddRange(origins);
+}
+var allowedOriginsConfig = builder.Configuration["AllowedOrigins"];
+if (!string.IsNullOrEmpty(allowedOriginsConfig))
+{
+    var origins = allowedOriginsConfig.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(o => o.Trim())
+                                      .ToList();
+    allowedOrigins.AddRange(origins);
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                builder.Configuration["AllowedOrigins"] ?? "http://localhost:5173",
-                "https://*.vercel.app"
-              )
+        policy.WithOrigins(allowedOrigins.Distinct().ToArray())
               .SetIsOriginAllowedToAllowWildcardSubdomains()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
+
 
 // ── Controllers + Swagger ──────────────────────────────────────────
 builder.Services.AddControllers();
