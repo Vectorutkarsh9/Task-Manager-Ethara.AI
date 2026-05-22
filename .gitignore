@@ -1,0 +1,15 @@
+# .NET
+Backend/bin/
+Backend/obj/
+Backend/*.user
+Backend/appsettings.Development.json
+
+# Node
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env.local
+Frontend/.env
+
+# General
+.DS_Store
+*.env
